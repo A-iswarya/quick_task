@@ -73,34 +73,102 @@ class _UserPageState extends State<UserPage> {
                         child: CircularProgressIndicator()),
                   );
                 default:
-                  return Container(
-                    alignment: Alignment.topRight,
-                    child: Column(
+                  return Column(children: [
+                    Row(
+                      // mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        const SizedBox(
-                          height: 10,
-                        ),
                         Padding(
-                          padding: const EdgeInsets.only(right: 10),
-                          child: RichText(
-                              text: TextSpan(
-                            text: 'Hi, ',
-                            style: const TextStyle(fontSize: 16),
-                            children: <TextSpan>[
-                              TextSpan(
-                                text: capitalizeName(
-                                    '${snapshot.data!.username}'),
-                                style: const TextStyle(
-                                    fontSize: 17,
-                                    // fontWeight: FontWeight.bold,
-                                    color: Color.fromRGBO(238, 24, 0, 1)),
-                              )
-                            ],
-                          )),
-                        )
+                            padding: const EdgeInsets.all(10),
+                            child: Text(
+                              'Tasks',
+                              style: TextStyle(
+                                  fontSize: 20,
+                                  color: bgColor,
+                                  fontWeight: FontWeight.bold),
+                            )),
+                        const Spacer(),
+                        Padding(
+                            padding: const EdgeInsets.all(15),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.person_2_outlined,
+                                  color: bgColor,
+                                ),
+                                Text(
+                                  capitalizeName('${snapshot.data!.username}'),
+                                  style: TextStyle(color: bgColor),
+                                )
+                              ],
+                            ))
                       ],
                     ),
-                  );
+                    OutlinedButton(
+                      onPressed: null,
+                      style: ButtonStyle(
+                        foregroundColor: MaterialStatePropertyAll(bgColor),
+                      ),
+                      child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [Icon(Icons.add), Text('Add Task')]),
+                    ),
+                    // const SizedBox(height: 10),
+                    Center(
+                      child: Card(
+                        // surfaceTintColor: Colors.amber,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: <Widget>[
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: ListTile(
+                                    title: Text('Complete Assignment',
+                                        style: TextStyle(color: bgColor)),
+                                    subtitle: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.calendar_month,
+                                          size: 20,
+                                          color: bgColor,
+                                        ), // Calendar icon
+                                        const SizedBox(width: 5), // Spacer
+                                        Text(
+                                          '11/5/2024',
+                                          style: TextStyle(color: bgColor),
+                                        ), // Actual subtitle text
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                Checkbox(
+                                  activeColor: bgColor,
+                                  value:
+                                      true, // Set initial checkbox value here
+                                  onChanged: (bool? value) {
+                                    // Handle checkbox state change
+                                  },
+                                ),
+                              ],
+                            ),
+                            Row(
+                              children: <Widget>[
+                                TextButton(
+                                  child: const Text('Edit'),
+                                  onPressed: () {/* ... */},
+                                ),
+                                const Spacer(),
+                                TextButton(
+                                  child: const Text('Delete'),
+                                  onPressed: () {/* ... */},
+                                )
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ]);
               }
             }));
   }
