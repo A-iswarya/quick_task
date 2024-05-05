@@ -187,61 +187,136 @@ class _UserPageState extends State<UserPage> {
                       ),
                     ),
                     // const SizedBox(height: 10),
-                    Center(
-                      child: Card(
-                        // surfaceTintColor: Colors.amber,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: <Widget>[
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: ListTile(
-                                    title: Text('Complete Assignment',
-                                        style: TextStyle(color: bgColor)),
-                                    subtitle: Row(
-                                      children: [
-                                        Icon(
-                                          Icons.calendar_month,
-                                          size: 20,
-                                          color: bgColor,
-                                        ), // Calendar icon
-                                        const SizedBox(width: 5), // Spacer
-                                        Text(
-                                          '11/5/2024',
-                                          style: TextStyle(color: bgColor),
-                                        ), // Actual subtitle text
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                Checkbox(
-                                  activeColor: bgColor,
-                                  value:
-                                      true, // Set initial checkbox value here
-                                  onChanged: (bool? value) {
-                                    // Handle checkbox state change
-                                  },
-                                ),
-                              ],
-                            ),
-                            Row(
-                              children: <Widget>[
-                                TextButton(
-                                  child: const Text('Edit'),
-                                  onPressed: () {/* ... */},
-                                ),
-                                const Spacer(),
-                                TextButton(
-                                  child: const Text('Delete'),
-                                  onPressed: () {/* ... */},
-                                )
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+
+                    Expanded(
+                        child: FutureBuilder<List<ParseObject>>(
+                            future: getTodo(),
+                            builder: (context, snapshot) {
+                              switch (snapshot.connectionState) {
+                                case ConnectionState.none:
+                                case ConnectionState.waiting:
+                                  return Center(
+                                    child: Container(
+                                        width: 100,
+                                        height: 100,
+                                        child: CircularProgressIndicator()),
+                                  );
+                                default:
+                                  if (snapshot.hasError) {
+                                    return const Center(
+                                      child: Text("Something went wrong!"),
+                                    );
+                                  }
+                                  if (snapshot.hasData) {
+                                    return ListView.builder(
+                                        // padding: EdgeInsets.only(top: 10.0),
+                                        itemCount: snapshot.data!.length,
+                                        itemBuilder: (context, index) {
+                                          final varTodo = snapshot.data?[index];
+                                          final varTitle =
+                                              varTodo?.get<String>('title') ??
+                                                  '';
+                                          final varDueDate = varTodo
+                                                  ?.get<String>('due_date') ??
+                                              '';
+                                          final varCompleted =
+                                              varTodo?.get<bool>('completed') ??
+                                                  false;
+
+                                          return Card(
+                                            // surfaceTintColor: Colors.amber,
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: <Widget>[
+                                                Row(
+                                                  children: [
+                                                    Expanded(
+                                                      child: ListTile(
+                                                        title: Text(
+                                                            capitalizeTaskTitle(
+                                                                varTitle),
+                                                            style: TextStyle(
+                                                                color:
+                                                                    bgColor)),
+                                                        subtitle: Row(
+                                                          children: [
+                                                            Icon(
+                                                              Icons
+                                                                  .calendar_month,
+                                                              size: 20,
+                                                              color: bgColor,
+                                                            ), // Calendar icon
+                                                            const SizedBox(
+                                                                width:
+                                                                    5), // Spacer
+                                                            Text(
+                                                              varDueDate,
+                                                              style: TextStyle(
+                                                                  color:
+                                                                      bgColor),
+                                                            ), // Actual subtitle text
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    Checkbox(
+                                                        activeColor: bgColor,
+                                                        value:
+                                                            varCompleted, // Set initial checkbox value here
+                                                        onChanged:
+                                                            (value) async {
+                                                          await updateTodo(
+                                                              varTodo
+                                                                  ?.objectId!,
+                                                              value!);
+                                                          setState(() {
+                                                            //Refresh UI
+                                                          });
+                                                        }),
+                                                  ],
+                                                ),
+                                                Row(
+                                                  children: <Widget>[
+                                                    TextButton(
+                                                      child: const Text('Edit'),
+                                                      onPressed: () {/* ... */},
+                                                    ),
+                                                    const Spacer(),
+                                                    TextButton(
+                                                      child:
+                                                          const Text('Delete'),
+                                                      onPressed: () async {
+                                                        await deleteTodo(
+                                                            varTodo?.objectId!);
+                                                        setState(() {
+                                                          const snackBar =
+                                                              SnackBar(
+                                                            content: Text(
+                                                                "Task is deleted!"),
+                                                            duration: Duration(
+                                                                seconds: 2),
+                                                          );
+                                                          ScaffoldMessenger.of(
+                                                              context)
+                                                            ..removeCurrentSnackBar()
+                                                            ..showSnackBar(
+                                                                snackBar);
+                                                        });
+                                                      },
+                                                    )
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        });
+                                  } else {
+                                    return const Center(
+                                      child: Text(" "),
+                                    );
+                                  }
+                              }
+                            }))
                   ]);
               }
             }));
@@ -253,5 +328,29 @@ class _UserPageState extends State<UserPage> {
       ..set('due_date', dueDate)
       ..set('completed', false);
     await todo.save();
+  }
+
+  Future<List<ParseObject>> getTodo() async {
+    QueryBuilder<ParseObject> queryTodo =
+        QueryBuilder<ParseObject>(ParseObject('Tasks'));
+    final ParseResponse apiResponse = await queryTodo.query();
+
+    if (apiResponse.success && apiResponse.results != null) {
+      return apiResponse.results as List<ParseObject>;
+    } else {
+      return [];
+    }
+  }
+
+  Future<void> updateTodo(String? id, bool done) async {
+    var todo = ParseObject('Tasks')
+      ..objectId = id
+      ..set('done', done);
+    await todo.save();
+  }
+
+  Future<void> deleteTodo(String? id) async {
+    var todo = ParseObject('Tasks')..objectId = id;
+    await todo.delete();
   }
 }

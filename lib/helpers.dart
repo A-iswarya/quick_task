@@ -17,6 +17,11 @@ String capitalizeName(String name) {
   return capitalizedParts.join(' ');
 }
 
+String capitalizeTaskTitle(String title) {
+  if (title.isEmpty) return ''; // Handle empty string case
+  return title.substring(0, 1).toUpperCase() + title.substring(1);
+}
+
 bool isValidDateFormat(String dateString) {
   // Check if the date string matches the format "dd/mm/yyyy"
   final RegExp dateRegex = RegExp(r'^\d{2}/\d{2}/\d{4}$');
