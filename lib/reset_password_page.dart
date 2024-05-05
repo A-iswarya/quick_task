@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:parse_server_sdk_flutter/parse_server_sdk_flutter.dart';
+import 'message.dart';
 
 class ResetPasswordPage extends StatefulWidget {
   @override
@@ -44,5 +46,19 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
         ));
   }
 
-  void doUserResetPassword() async {}
+  void doUserResetPassword() async {
+    final ParseUser user = ParseUser(null, null, controllerEmail.text.trim());
+    final ParseResponse parseResponse = await user.requestPasswordReset();
+    if (parseResponse.success) {
+      Message.showSuccess(
+          context: context,
+          message: 'Password reset instructions have been sent to email!',
+          onPressed: () {
+            Navigator.of(context).pop();
+          });
+    } else {
+      Message.showError(
+          context: context, message: parseResponse.error!.message);
+    }
+  }
 }

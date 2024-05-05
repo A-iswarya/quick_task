@@ -3,6 +3,9 @@ import 'package:parse_server_sdk_flutter/parse_server_sdk_flutter.dart';
 
 import 'message.dart';
 import 'login_page.dart';
+import 'helpers.dart';
+
+import 'header.dart';
 
 class UserPage extends StatefulWidget {
   const UserPage({super.key});
@@ -27,7 +30,8 @@ class _UserPageState extends State<UserPage> {
       if (response.success) {
         Message.showSuccess(
             context: context,
-            message: 'User was successfully logout!',
+            message:
+                'You have been successfully logged out. Thank you for using our app!',
             onPressed: () {
               Navigator.pushAndRemoveUntil(
                 context,
@@ -41,13 +45,21 @@ class _UserPageState extends State<UserPage> {
     }
 
     return Scaffold(
-        appBar: AppBar(
-          title: const Text(
-            'Quick Task',
-            style: TextStyle(color: Color.fromARGB(255, 232, 227, 214)),
+        appBar: Header(actions: [
+          TextButton(
+            child: const Text('Logout',
+                style: TextStyle(color: Color.fromARGB(255, 232, 227, 214))),
+            onPressed: () => doUserLogout(),
           ),
-          backgroundColor: Color.fromRGBO(1, 20, 52, 1),
-        ),
+          const Icon(
+            Icons.logout_sharp,
+            color: Color.fromARGB(255, 232, 227, 214),
+            size: 20,
+          ),
+          const SizedBox(
+            width: 40,
+          )
+        ]),
         body: FutureBuilder<ParseUser?>(
             future: getUser(),
             builder: (context, snapshot) {
@@ -61,24 +73,31 @@ class _UserPageState extends State<UserPage> {
                         child: CircularProgressIndicator()),
                   );
                 default:
-                  return Padding(
-                    padding: const EdgeInsets.all(8.0),
+                  return Container(
+                    alignment: Alignment.topRight,
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Center(
-                            child: Text('Hello, ${snapshot.data!.username}')),
                         const SizedBox(
-                          height: 16,
+                          height: 10,
                         ),
-                        SizedBox(
-                          height: 50,
-                          child: ElevatedButton(
-                            child: const Text('Logout'),
-                            onPressed: () => doUserLogout(),
-                          ),
-                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(right: 10),
+                          child: RichText(
+                              text: TextSpan(
+                            text: 'Hi, ',
+                            style: const TextStyle(fontSize: 16),
+                            children: <TextSpan>[
+                              TextSpan(
+                                text: capitalizeName(
+                                    '${snapshot.data!.username}'),
+                                style: const TextStyle(
+                                    fontSize: 17,
+                                    // fontWeight: FontWeight.bold,
+                                    color: Color.fromRGBO(238, 24, 0, 1)),
+                              )
+                            ],
+                          )),
+                        )
                       ],
                     ),
                   );
