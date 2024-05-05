@@ -179,7 +179,7 @@ class _LoginPageState extends State<LoginPage> {
   void navigateToSignUp() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => SignUpPage()),
+      MaterialPageRoute(builder: (context) => const SignUpPage()),
     );
   }
 
