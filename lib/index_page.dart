@@ -29,7 +29,8 @@ class IndexPage extends StatelessWidget {
     return MaterialApp(
       title: 'Quick Task',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF011C33)),
+        colorScheme:
+            ColorScheme.fromSeed(seedColor: Color.fromARGB(255, 3, 29, 52)),
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       home: FutureBuilder<bool>(
@@ -48,7 +49,7 @@ class IndexPage extends StatelessWidget {
                 );
               default:
                 if (snapshot.hasData && snapshot.data!) {
-                  return UserPage();
+                  return const UserPage();
                 } else {
                   return LoginPage();
                 }

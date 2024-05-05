@@ -4,11 +4,17 @@ import 'package:parse_server_sdk_flutter/parse_server_sdk_flutter.dart';
 import 'message.dart';
 import 'login_page.dart';
 
-class UserPage extends StatelessWidget {
-  UserPage({super.key});
+class UserPage extends StatefulWidget {
+  const UserPage({super.key});
 
+  @override
+  State<UserPage> createState() {
+    return _UserPageState();
+  }
+}
+
+class _UserPageState extends State<UserPage> {
   ParseUser? currentUser;
-
   Future<ParseUser?> getUser() async {
     currentUser = await ParseUser.currentUser() as ParseUser?;
     return currentUser;
@@ -36,7 +42,11 @@ class UserPage extends StatelessWidget {
 
     return Scaffold(
         appBar: AppBar(
-          title: const Text('User logged in - Current User'),
+          title: const Text(
+            'Quick Task',
+            style: TextStyle(color: Color.fromARGB(255, 232, 227, 214)),
+          ),
+          backgroundColor: Color.fromRGBO(1, 20, 52, 1),
         ),
         body: FutureBuilder<ParseUser?>(
             future: getUser(),
@@ -44,11 +54,11 @@ class UserPage extends StatelessWidget {
               switch (snapshot.connectionState) {
                 case ConnectionState.none:
                 case ConnectionState.waiting:
-                  return Center(
-                    child: Container(
+                  return const Center(
+                    child: SizedBox(
                         width: 100,
                         height: 100,
-                        child: const CircularProgressIndicator()),
+                        child: CircularProgressIndicator()),
                   );
                 default:
                   return Padding(
@@ -59,10 +69,10 @@ class UserPage extends StatelessWidget {
                       children: [
                         Center(
                             child: Text('Hello, ${snapshot.data!.username}')),
-                        SizedBox(
+                        const SizedBox(
                           height: 16,
                         ),
-                        Container(
+                        SizedBox(
                           height: 50,
                           child: ElevatedButton(
                             child: const Text('Logout'),
