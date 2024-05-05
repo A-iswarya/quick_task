@@ -17,7 +17,34 @@ class UserPage extends StatefulWidget {
 }
 
 class _UserPageState extends State<UserPage> {
+  final titleController = TextEditingController();
+  final dueDateController = TextEditingController();
+
   ParseUser? currentUser;
+
+  void addToDo() async {
+    if (titleController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("Title is empty!"),
+        duration: Duration(seconds: 2),
+      ));
+      return;
+    }
+
+    if (!isValidDateFormat(dueDateController.text.trim())) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("Invalid due date!"),
+        duration: Duration(seconds: 2),
+      ));
+      return;
+    }
+    await saveTodo(titleController.text, dueDateController.text);
+    setState(() {
+      titleController.clear();
+      dueDateController.clear();
+    });
+  }
+
   Future<ParseUser?> getUser() async {
     currentUser = await ParseUser.currentUser() as ParseUser?;
     return currentUser;
@@ -104,13 +131,60 @@ class _UserPageState extends State<UserPage> {
                       ],
                     ),
                     OutlinedButton(
-                      onPressed: null,
-                      style: ButtonStyle(
-                        foregroundColor: MaterialStatePropertyAll(bgColor),
-                      ),
+                      onPressed: () {
+                        showModalBottomSheet(
+                          context: context,
+                          isScrollControlled: true,
+                          builder: (BuildContext context) {
+                            return Container(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  TextField(
+                                    textCapitalization:
+                                        TextCapitalization.sentences,
+                                    controller: titleController,
+                                    decoration: const InputDecoration(
+                                      hintText: 'Enter Task Name',
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  TextField(
+                                    controller: dueDateController,
+                                    decoration: InputDecoration(
+                                        hintText: 'Enter Due Date',
+                                        helperText:
+                                            'Must be in the format: dd/mm/yyyy',
+                                        helperStyle: TextStyle(color: bgColor)),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      // Implement add task functionality here
+                                      addToDo();
+                                      Navigator.pop(context); // Close the modal
+                                    },
+                                    style: ButtonStyle(
+                                        backgroundColor:
+                                            MaterialStatePropertyAll(bgColor)),
+                                    child: const Text(
+                                      'Add Task',
+                                      style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        );
+                      },
                       child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [Icon(Icons.add), Text('Add Task')]),
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [Icon(Icons.add), Text('Add Task')],
+                      ),
                     ),
                     // const SizedBox(height: 10),
                     Center(
@@ -171,5 +245,13 @@ class _UserPageState extends State<UserPage> {
                   ]);
               }
             }));
+  }
+
+  Future<void> saveTodo(String title, String dueDate) async {
+    final todo = ParseObject('Tasks')
+      ..set('title', title)
+      ..set('due_date', dueDate)
+      ..set('completed', false);
+    await todo.save();
   }
 }
