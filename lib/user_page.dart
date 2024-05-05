@@ -22,7 +22,7 @@ class _UserPageState extends State<UserPage> {
 
   ParseUser? currentUser;
 
-  void addToDo() async {
+  void addNewTask() async {
     if (titleController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
         content: Text("Title is empty!"),
@@ -38,7 +38,7 @@ class _UserPageState extends State<UserPage> {
       ));
       return;
     }
-    await saveTodo(titleController.text, dueDateController.text);
+    await saveNewTask(titleController.text, dueDateController.text);
     setState(() {
       titleController.clear();
       dueDateController.clear();
@@ -162,7 +162,7 @@ class _UserPageState extends State<UserPage> {
                                   ElevatedButton(
                                     onPressed: () {
                                       // Implement add task functionality here
-                                      addToDo();
+                                      addNewTask();
                                       Navigator.pop(context); // Close the modal
                                     },
                                     style: ButtonStyle(
@@ -190,13 +190,13 @@ class _UserPageState extends State<UserPage> {
 
                     Expanded(
                         child: FutureBuilder<List<ParseObject>>(
-                            future: getTodo(),
+                            future: getTasks(),
                             builder: (context, snapshot) {
                               switch (snapshot.connectionState) {
                                 case ConnectionState.none:
                                 case ConnectionState.waiting:
-                                  return Center(
-                                    child: Container(
+                                  return const Center(
+                                    child: SizedBox(
                                         width: 100,
                                         height: 100,
                                         child: CircularProgressIndicator()),
@@ -212,19 +212,22 @@ class _UserPageState extends State<UserPage> {
                                         // padding: EdgeInsets.only(top: 10.0),
                                         itemCount: snapshot.data!.length,
                                         itemBuilder: (context, index) {
-                                          final varTodo = snapshot.data?[index];
-                                          final varTitle =
-                                              varTodo?.get<String>('title') ??
+                                          final task = snapshot.data?[index];
+                                          final title =
+                                              task?.get<String>('title') ?? '';
+                                          final dueDate =
+                                              task?.get<String>('due_date') ??
                                                   '';
-                                          final varDueDate = varTodo
-                                                  ?.get<String>('due_date') ??
-                                              '';
-                                          final varCompleted =
-                                              varTodo?.get<bool>('completed') ??
+                                          final completed =
+                                              task?.get<bool>('completed') ??
                                                   false;
 
                                           return Card(
-                                            // surfaceTintColor: Colors.amber,
+                                            color: completed
+                                                ? Color.fromARGB(
+                                                    255, 196, 231, 203)
+                                                : Color.fromARGB(
+                                                    255, 255, 255, 255),
                                             child: Column(
                                               mainAxisSize: MainAxisSize.min,
                                               children: <Widget>[
@@ -234,7 +237,7 @@ class _UserPageState extends State<UserPage> {
                                                       child: ListTile(
                                                         title: Text(
                                                             capitalizeTaskTitle(
-                                                                varTitle),
+                                                                title),
                                                             style: TextStyle(
                                                                 color:
                                                                     bgColor)),
@@ -250,7 +253,7 @@ class _UserPageState extends State<UserPage> {
                                                                 width:
                                                                     5), // Spacer
                                                             Text(
-                                                              varDueDate,
+                                                              dueDate,
                                                               style: TextStyle(
                                                                   color:
                                                                       bgColor),
@@ -262,12 +265,11 @@ class _UserPageState extends State<UserPage> {
                                                     Checkbox(
                                                         activeColor: bgColor,
                                                         value:
-                                                            varCompleted, // Set initial checkbox value here
+                                                            completed, // Set initial checkbox value here
                                                         onChanged:
                                                             (value) async {
-                                                          await updateTodo(
-                                                              varTodo
-                                                                  ?.objectId!,
+                                                          await updateCompleted(
+                                                              task?.objectId!,
                                                               value!);
                                                           setState(() {
                                                             //Refresh UI
@@ -286,8 +288,8 @@ class _UserPageState extends State<UserPage> {
                                                       child:
                                                           const Text('Delete'),
                                                       onPressed: () async {
-                                                        await deleteTodo(
-                                                            varTodo?.objectId!);
+                                                        await deleteTask(
+                                                            task?.objectId!);
                                                         setState(() {
                                                           const snackBar =
                                                               SnackBar(
@@ -322,18 +324,18 @@ class _UserPageState extends State<UserPage> {
             }));
   }
 
-  Future<void> saveTodo(String title, String dueDate) async {
-    final todo = ParseObject('Tasks')
+  Future<void> saveNewTask(String title, String dueDate) async {
+    final task = ParseObject('Tasks')
       ..set('title', title)
       ..set('due_date', dueDate)
       ..set('completed', false);
-    await todo.save();
+    await task.save();
   }
 
-  Future<List<ParseObject>> getTodo() async {
-    QueryBuilder<ParseObject> queryTodo =
+  Future<List<ParseObject>> getTasks() async {
+    QueryBuilder<ParseObject> queryTask =
         QueryBuilder<ParseObject>(ParseObject('Tasks'));
-    final ParseResponse apiResponse = await queryTodo.query();
+    final ParseResponse apiResponse = await queryTask.query();
 
     if (apiResponse.success && apiResponse.results != null) {
       return apiResponse.results as List<ParseObject>;
@@ -342,15 +344,15 @@ class _UserPageState extends State<UserPage> {
     }
   }
 
-  Future<void> updateTodo(String? id, bool done) async {
-    var todo = ParseObject('Tasks')
+  Future<void> updateCompleted(String? id, bool completed) async {
+    var task = ParseObject('Tasks')
       ..objectId = id
-      ..set('done', done);
-    await todo.save();
+      ..set('completed', completed);
+    await task.save();
   }
 
-  Future<void> deleteTodo(String? id) async {
-    var todo = ParseObject('Tasks')..objectId = id;
-    await todo.delete();
+  Future<void> deleteTask(String? id) async {
+    var task = ParseObject('Tasks')..objectId = id;
+    await task.delete();
   }
 }
