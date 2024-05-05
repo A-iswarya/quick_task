@@ -186,7 +186,7 @@ class _LoginPageState extends State<LoginPage> {
   void navigateToResetPassword() {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => ResetPasswordPage()),
+      MaterialPageRoute(builder: (context) => const ResetPasswordPage()),
     );
   }
 }
