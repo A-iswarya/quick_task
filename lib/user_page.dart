@@ -19,6 +19,8 @@ class UserPage extends StatefulWidget {
 class _UserPageState extends State<UserPage> {
   final titleController = TextEditingController();
   final dueDateController = TextEditingController();
+  final updateTitleController = TextEditingController();
+  final updateDueDateController = TextEditingController();
 
   ParseUser? currentUser;
 
@@ -141,6 +143,10 @@ class _UserPageState extends State<UserPage> {
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
+                                  const Text('Add Task',
+                                      style: TextStyle(
+                                          fontSize: 18.0,
+                                          fontWeight: FontWeight.bold)),
                                   TextField(
                                     textCapitalization:
                                         TextCapitalization.sentences,
@@ -224,9 +230,9 @@ class _UserPageState extends State<UserPage> {
 
                                           return Card(
                                             color: completed
-                                                ? Color.fromARGB(
+                                                ? const Color.fromARGB(
                                                     255, 196, 231, 203)
-                                                : Color.fromARGB(
+                                                : const Color.fromARGB(
                                                     255, 255, 255, 255),
                                             child: Column(
                                               mainAxisSize: MainAxisSize.min,
@@ -235,9 +241,7 @@ class _UserPageState extends State<UserPage> {
                                                   children: [
                                                     Expanded(
                                                       child: ListTile(
-                                                        title: Text(
-                                                            capitalizeTaskTitle(
-                                                                title),
+                                                        title: Text(title,
                                                             style: TextStyle(
                                                                 color:
                                                                     bgColor)),
@@ -281,7 +285,85 @@ class _UserPageState extends State<UserPage> {
                                                   children: <Widget>[
                                                     TextButton(
                                                       child: const Text('Edit'),
-                                                      onPressed: () {/* ... */},
+                                                      onPressed: () {
+                                                        updateTitleController
+                                                            .text = title;
+                                                        updateDueDateController
+                                                            .text = dueDate;
+                                                        showModalBottomSheet(
+                                                          context: context,
+                                                          builder: (BuildContext
+                                                              context) {
+                                                            return Container(
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                      .all(
+                                                                      16.0),
+                                                              child: Column(
+                                                                crossAxisAlignment:
+                                                                    CrossAxisAlignment
+                                                                        .start,
+                                                                children: [
+                                                                  const Center(
+                                                                      child: Text(
+                                                                          'Edit Task',
+                                                                          style: TextStyle(
+                                                                              fontSize: 18.0,
+                                                                              fontWeight: FontWeight.bold))),
+                                                                  TextFormField(
+                                                                    controller:
+                                                                        updateTitleController,
+                                                                    // initialValue:
+                                                                    //     title,
+                                                                    decoration: const InputDecoration(
+                                                                        labelText:
+                                                                            'Title',
+                                                                        labelStyle:
+                                                                            TextStyle(fontSize: 15)),
+                                                                  ),
+                                                                  TextFormField(
+                                                                    controller:
+                                                                        updateDueDateController,
+                                                                    // initialValue:
+                                                                    //     dueDate,
+                                                                    decoration: const InputDecoration(
+                                                                        labelText:
+                                                                            'Due Date',
+                                                                        labelStyle:
+                                                                            TextStyle(fontSize: 15)),
+                                                                  ),
+                                                                  const SizedBox(
+                                                                      height:
+                                                                          16),
+                                                                  Center(
+                                                                      child:
+                                                                          ElevatedButton(
+                                                                    onPressed:
+                                                                        () {
+                                                                      updateTask(
+                                                                          task?.objectId!);
+                                                                      Navigator.pop(
+                                                                          context); // Close the modal
+                                                                    },
+                                                                    style: ButtonStyle(
+                                                                        backgroundColor:
+                                                                            MaterialStatePropertyAll(bgColor)),
+                                                                    child:
+                                                                        const Text(
+                                                                      'Save Changes',
+                                                                      style: TextStyle(
+                                                                          color: Colors
+                                                                              .white,
+                                                                          fontWeight:
+                                                                              FontWeight.bold),
+                                                                    ),
+                                                                  ))
+                                                                ],
+                                                              ),
+                                                            ); // Pass the task to the modal
+                                                          },
+                                                        );
+                                                      },
                                                     ),
                                                     const Spacer(),
                                                     TextButton(
@@ -328,15 +410,19 @@ class _UserPageState extends State<UserPage> {
     final task = ParseObject('Tasks')
       ..set('title', title)
       ..set('due_date', dueDate)
-      ..set('completed', false);
+      ..set('completed', false)
+      ..set('user_id', currentUser?.objectId);
+
     await task.save();
   }
 
   Future<List<ParseObject>> getTasks() async {
     QueryBuilder<ParseObject> queryTask =
         QueryBuilder<ParseObject>(ParseObject('Tasks'));
+    queryTask
+      ..whereContains('user_id', currentUser?.objectId ?? '')
+      ..orderByDescending('createdAt');
     final ParseResponse apiResponse = await queryTask.query();
-
     if (apiResponse.success && apiResponse.results != null) {
       return apiResponse.results as List<ParseObject>;
     } else {
@@ -349,6 +435,37 @@ class _UserPageState extends State<UserPage> {
       ..objectId = id
       ..set('completed', completed);
     await task.save();
+  }
+
+  Future<void> updateTask(String? id) async {
+    final title = updateTitleController.text.trim();
+    final dueDate = updateDueDateController.text.trim();
+    if (title.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("Title is empty!"),
+        duration: Duration(seconds: 2),
+      ));
+      return;
+    }
+
+    if (!isValidDateFormat(dueDate)) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text("Invalid due date!"),
+        duration: Duration(seconds: 2),
+      ));
+      return;
+    }
+    final task = ParseObject('Tasks')
+      ..objectId = id
+      ..set('title', title)
+      ..set('due_date', dueDate)
+      ..set('user_id', currentUser?.objectId);
+
+    await task.save();
+    setState(() {
+      titleController.clear();
+      dueDateController.clear();
+    });
   }
 
   Future<void> deleteTask(String? id) async {
