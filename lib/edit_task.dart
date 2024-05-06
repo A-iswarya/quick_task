@@ -48,9 +48,11 @@ class EditTask extends StatelessWidget {
                     controller: updateDueDateController,
                     // initialValue:
                     //     dueDate,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                         labelText: 'Due Date',
-                        labelStyle: TextStyle(fontSize: 15)),
+                        labelStyle: const TextStyle(fontSize: 15),
+                        helperText: 'Must be in the format: dd/mm/yyyy',
+                        helperStyle: TextStyle(color: bgColor)),
                   ),
                   const SizedBox(height: 16),
                   Center(
