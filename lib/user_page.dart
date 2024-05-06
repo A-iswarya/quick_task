@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:parse_server_sdk_flutter/parse_server_sdk_flutter.dart';
+import 'package:quick_task/edit_task.dart';
+import 'package:quick_task/task_details.dart';
 
 import 'message.dart';
 import 'login_page.dart';
 import 'helpers.dart';
-
+import 'home_header_row.dart';
 import 'header.dart';
+import 'add_new_task_button.dart';
 
 class UserPage extends StatefulWidget {
   const UserPage({super.key});
@@ -103,97 +106,12 @@ class _UserPageState extends State<UserPage> {
                   );
                 default:
                   return Column(children: [
-                    Row(
-                      // mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Padding(
-                            padding: const EdgeInsets.all(10),
-                            child: Text(
-                              'Tasks',
-                              style: TextStyle(
-                                  fontSize: 20,
-                                  color: bgColor,
-                                  fontWeight: FontWeight.bold),
-                            )),
-                        const Spacer(),
-                        Padding(
-                            padding: const EdgeInsets.all(15),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.person_2_outlined,
-                                  color: bgColor,
-                                ),
-                                Text(
-                                  capitalizeName('${snapshot.data!.username}'),
-                                  style: TextStyle(color: bgColor),
-                                )
-                              ],
-                            ))
-                      ],
-                    ),
-                    OutlinedButton(
-                      onPressed: () {
-                        showModalBottomSheet(
-                          context: context,
-                          isScrollControlled: true,
-                          builder: (BuildContext context) {
-                            return Container(
-                              padding: const EdgeInsets.all(16),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Text('Add Task',
-                                      style: TextStyle(
-                                          fontSize: 18.0,
-                                          fontWeight: FontWeight.bold)),
-                                  TextField(
-                                    textCapitalization:
-                                        TextCapitalization.sentences,
-                                    controller: titleController,
-                                    decoration: const InputDecoration(
-                                      hintText: 'Enter Task Name',
-                                    ),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  TextField(
-                                    controller: dueDateController,
-                                    decoration: InputDecoration(
-                                        hintText: 'Enter Due Date',
-                                        helperText:
-                                            'Must be in the format: dd/mm/yyyy',
-                                        helperStyle: TextStyle(color: bgColor)),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  ElevatedButton(
-                                    onPressed: () {
-                                      // Implement add task functionality here
-                                      addNewTask();
-                                      Navigator.pop(context); // Close the modal
-                                    },
-                                    style: ButtonStyle(
-                                        backgroundColor:
-                                            MaterialStatePropertyAll(bgColor)),
-                                    child: const Text(
-                                      'Add Task',
-                                      style: TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                        );
-                      },
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [Icon(Icons.add), Text('Add Task')],
-                      ),
-                    ),
+                    HeaderRow(userName: '${snapshot.data!.username}'),
+                    AddNewTaskButton(
+                        titleController: titleController,
+                        dueDateController: dueDateController,
+                        addNewTask: addNewTask),
                     // const SizedBox(height: 10),
-
                     Expanded(
                         child: FutureBuilder<List<ParseObject>>(
                             future: getTasks(),
@@ -237,134 +155,24 @@ class _UserPageState extends State<UserPage> {
                                             child: Column(
                                               mainAxisSize: MainAxisSize.min,
                                               children: <Widget>[
-                                                Row(
-                                                  children: [
-                                                    Expanded(
-                                                      child: ListTile(
-                                                        title: Text(title,
-                                                            style: TextStyle(
-                                                                color:
-                                                                    bgColor)),
-                                                        subtitle: Row(
-                                                          children: [
-                                                            Icon(
-                                                              Icons
-                                                                  .calendar_month,
-                                                              size: 20,
-                                                              color: bgColor,
-                                                            ), // Calendar icon
-                                                            const SizedBox(
-                                                                width:
-                                                                    5), // Spacer
-                                                            Text(
-                                                              dueDate,
-                                                              style: TextStyle(
-                                                                  color:
-                                                                      bgColor),
-                                                            ), // Actual subtitle text
-                                                          ],
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    Checkbox(
-                                                        activeColor: bgColor,
-                                                        value:
-                                                            completed, // Set initial checkbox value here
-                                                        onChanged:
-                                                            (value) async {
-                                                          await updateCompleted(
-                                                              task?.objectId!,
-                                                              value!);
-                                                          setState(() {
-                                                            //Refresh UI
-                                                          });
-                                                        }),
-                                                  ],
-                                                ),
+                                                TaskDetails(
+                                                    title: title,
+                                                    dueDate: dueDate,
+                                                    completed: completed,
+                                                    taskId: task?.objectId!,
+                                                    handleCheckboxChange:
+                                                        handleCheckboxChange),
                                                 Row(
                                                   children: <Widget>[
-                                                    TextButton(
-                                                      child: const Text('Edit'),
-                                                      onPressed: () {
-                                                        updateTitleController
-                                                            .text = title;
-                                                        updateDueDateController
-                                                            .text = dueDate;
-                                                        showModalBottomSheet(
-                                                          context: context,
-                                                          builder: (BuildContext
-                                                              context) {
-                                                            return Container(
-                                                              padding:
-                                                                  const EdgeInsets
-                                                                      .all(
-                                                                      16.0),
-                                                              child: Column(
-                                                                crossAxisAlignment:
-                                                                    CrossAxisAlignment
-                                                                        .start,
-                                                                children: [
-                                                                  const Center(
-                                                                      child: Text(
-                                                                          'Edit Task',
-                                                                          style: TextStyle(
-                                                                              fontSize: 18.0,
-                                                                              fontWeight: FontWeight.bold))),
-                                                                  TextFormField(
-                                                                    controller:
-                                                                        updateTitleController,
-                                                                    // initialValue:
-                                                                    //     title,
-                                                                    decoration: const InputDecoration(
-                                                                        labelText:
-                                                                            'Title',
-                                                                        labelStyle:
-                                                                            TextStyle(fontSize: 15)),
-                                                                  ),
-                                                                  TextFormField(
-                                                                    controller:
-                                                                        updateDueDateController,
-                                                                    // initialValue:
-                                                                    //     dueDate,
-                                                                    decoration: const InputDecoration(
-                                                                        labelText:
-                                                                            'Due Date',
-                                                                        labelStyle:
-                                                                            TextStyle(fontSize: 15)),
-                                                                  ),
-                                                                  const SizedBox(
-                                                                      height:
-                                                                          16),
-                                                                  Center(
-                                                                      child:
-                                                                          ElevatedButton(
-                                                                    onPressed:
-                                                                        () {
-                                                                      updateTask(
-                                                                          task?.objectId!);
-                                                                      Navigator.pop(
-                                                                          context); // Close the modal
-                                                                    },
-                                                                    style: ButtonStyle(
-                                                                        backgroundColor:
-                                                                            MaterialStatePropertyAll(bgColor)),
-                                                                    child:
-                                                                        const Text(
-                                                                      'Save Changes',
-                                                                      style: TextStyle(
-                                                                          color: Colors
-                                                                              .white,
-                                                                          fontWeight:
-                                                                              FontWeight.bold),
-                                                                    ),
-                                                                  ))
-                                                                ],
-                                                              ),
-                                                            ); // Pass the task to the modal
-                                                          },
-                                                        );
-                                                      },
-                                                    ),
+                                                    EditTask(
+                                                        updateTitleController:
+                                                            updateTitleController,
+                                                        updateDueDateController:
+                                                            updateDueDateController,
+                                                        title: title,
+                                                        dueDate: dueDate,
+                                                        taskId: task?.objectId!,
+                                                        updateTask: updateTask),
                                                     const Spacer(),
                                                     TextButton(
                                                       child:
@@ -471,5 +279,14 @@ class _UserPageState extends State<UserPage> {
   Future<void> deleteTask(String? id) async {
     var task = ParseObject('Tasks')..objectId = id;
     await task.delete();
+  }
+
+  void handleCheckboxChange(bool? value, String? taskId) async {
+    if (taskId != null) {
+      await updateCompleted(taskId, value ?? false);
+      setState(() {
+        // Refresh UI
+      });
+    }
   }
 }

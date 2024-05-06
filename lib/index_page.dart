@@ -51,7 +51,7 @@ class IndexPage extends StatelessWidget {
                 if (snapshot.hasData && snapshot.data!) {
                   return const UserPage();
                 } else {
-                  return LoginPage();
+                  return const LoginPage();
                 }
             }
           }),
