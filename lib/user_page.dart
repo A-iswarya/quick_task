@@ -33,6 +33,8 @@ class _UserPageState extends State<UserPage> {
         content: Text("Title is empty!"),
         duration: Duration(seconds: 2),
       ));
+      titleController.text = '';
+      dueDateController.text = '';
       return;
     }
 
@@ -41,6 +43,8 @@ class _UserPageState extends State<UserPage> {
         content: Text("Invalid due date!"),
         duration: Duration(seconds: 2),
       ));
+      titleController.text = '';
+      dueDateController.text = '';
       return;
     }
     await saveNewTask(titleController.text, dueDateController.text);
